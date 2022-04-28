@@ -3,10 +3,9 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:lan_scanner/lan_scanner.dart';
-import 'package:led_strip_control/HomeScreen.dart';
-import 'package:led_strip_control/contexts/DiscoveredLEDsStrips.dart';
-import 'package:network_info_plus/network_info_plus.dart';
+import 'package:led_strip_control/devices_search.dart';
+import 'package:led_strip_control/contexts/devices_discovery_context.dart';
+import 'package:led_strip_control/storage/leds_devices_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:http/http.dart' as http;
@@ -42,28 +41,23 @@ void manageLEDSTasks() async {
   //     ));
 }
 
-void startScanForLocalDevices() async {
-  String wifiIP = (await (NetworkInfo().getWifiIP())) as String;
-  final subnet = ipToSubnet(wifiIP);
+void printSavedDevices() async {
+  // await deleteAllSavedDevices();
 
-  final stream = LanScanner().icmpScan(subnet, scanSpeeed: 30,
-      progressCallback: (progress) {
-    print('Progress: $progress');
-  });
-
-  stream.listen((HostModel device) {
-    print("Found host: ${device.ip}");
+  (await getAllSavedDevices()).forEach((element) {
+    debugPrint(element.toString());
   });
 }
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   manageLEDSTasks();
+  printSavedDevices();
 
   runApp(MultiProvider(
     providers: [
       ChangeNotifierProvider(
-        create: (_) => DiscoveredLEDsStrips(),
+        create: (_) => DevicesDiscoveryContext(),
       )
     ],
     child: const App(),
@@ -82,7 +76,7 @@ class App extends StatelessWidget {
           primarySwatch: Colors.blue,
         ),
         initialRoute: '/',
-        routes: {'/': (context) => const HomeScreen()});
+        routes: {'/': (context) => DevicesSearchScreen()});
   }
 }
 
